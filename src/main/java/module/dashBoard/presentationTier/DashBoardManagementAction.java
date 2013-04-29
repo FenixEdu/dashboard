@@ -38,11 +38,11 @@ import module.dashBoard.domain.DashBoardWidget;
 import module.dashBoard.domain.UserDashBoardPanel;
 import module.dashBoard.widgets.WidgetController;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import pt.ist.bennu.core.applicationTier.Authenticate.UserView;
 import pt.ist.bennu.core.domain.User;
@@ -53,7 +53,7 @@ import pt.ist.fenixWebFramework.servlets.filters.contentRewrite.RequestChecksumF
 import pt.ist.fenixWebFramework.servlets.filters.contentRewrite.RequestChecksumFilter.ChecksumPredicate;
 import pt.ist.fenixWebFramework.servlets.json.JsonObject;
 import pt.ist.fenixWebFramework.struts.annotations.Mapping;
-import pt.ist.fenixframework.pstm.AbstractDomainObject;
+import pt.ist.fenixframework.FenixFramework;
 
 @Mapping(path = "/dashBoardManagement")
 /**
@@ -65,7 +65,7 @@ import pt.ist.fenixframework.pstm.AbstractDomainObject;
  */
 public class DashBoardManagementAction extends ContextBaseAction {
 
-    private static Logger logger = Logger.getLogger(DashBoardManagementAction.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(DashBoardManagementAction.class.getName());
 
     static {
         RequestChecksumFilter.registerFilterRule(new ChecksumPredicate() {
@@ -110,7 +110,7 @@ public class DashBoardManagementAction extends ContextBaseAction {
     private List<DashBoardWidget> getWidgets(String column) {
         List<DashBoardWidget> widgetsInColumn = new ArrayList<DashBoardWidget>();
         for (String externalId : column.substring(0, column.length()).split(" ")) {
-            DashBoardWidget widget = AbstractDomainObject.fromExternalId(externalId);
+            DashBoardWidget widget = FenixFramework.getDomainObject(externalId);
             widgetsInColumn.add(widget);
         }
         return widgetsInColumn;
@@ -175,7 +175,7 @@ public class DashBoardManagementAction extends ContextBaseAction {
 
     private static boolean checkPanelUser(UserDashBoardPanel panel, User currentUser) {
         if (panel.getUser() != currentUser) {
-            if (logger.isEnabledFor(Priority.WARN)) {
+            if (logger.isWarnEnabled()) {
                 logger.warn("Current user (" + (currentUser != null ? currentUser.getUsername() : "null")
                         + ") is not the owner of the Panel (" + panel.getUser().getUsername() + ")");
             }

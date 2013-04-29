@@ -28,7 +28,7 @@ import module.dashBoard.WidgetRegister;
 import module.dashBoard.widgets.NoteWidget;
 import pt.ist.bennu.core.domain.ModuleInitializer;
 import pt.ist.bennu.core.domain.MyOrg;
-import pt.ist.fenixWebFramework.services.Service;
+import pt.ist.fenixframework.Atomic;
 
 /**
  * 
@@ -57,7 +57,7 @@ public class DashBoardController extends DashBoardController_Base implements Mod
         return myOrg.getDashBoardController();
     }
 
-    @Service
+    @Atomic
     public synchronized static void initialize() {
         if (!isInitialized) {
             try {
@@ -79,6 +79,31 @@ public class DashBoardController extends DashBoardController_Base implements Mod
     @Override
     public void init(MyOrg root) {
         WidgetRegister.registerWidget(NoteWidget.class);
+    }
+
+    @Deprecated
+    public java.util.Set<module.dashBoard.domain.Note> getNotes() {
+        return getNotesSet();
+    }
+
+    @Deprecated
+    public java.util.Set<module.dashBoard.domain.WidgetOptions> getWidgetsOptions() {
+        return getWidgetsOptionsSet();
+    }
+
+    @Deprecated
+    public java.util.Set<module.dashBoard.domain.DashBoardPanel> getPanels() {
+        return getPanelsSet();
+    }
+
+    @Deprecated
+    public java.util.Set<module.dashBoard.domain.DashBoardColumn> getDashBoardColumns() {
+        return getDashBoardColumnsSet();
+    }
+
+    @Deprecated
+    public java.util.Set<module.dashBoard.domain.DashBoardWidget> getAvailableWidgets() {
+        return getAvailableWidgetsSet();
     }
 
 }

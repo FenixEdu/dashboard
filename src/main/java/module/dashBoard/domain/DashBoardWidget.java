@@ -30,9 +30,9 @@ import module.dashBoard.widgets.WidgetController;
 import pt.ist.bennu.core.applicationTier.Authenticate.UserView;
 import pt.ist.bennu.core.domain.User;
 import pt.ist.bennu.core.domain.exceptions.DomainException;
-import pt.ist.fenixWebFramework.services.Service;
+import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.DomainObject;
-import pt.ist.fenixframework.pstm.AbstractDomainObject;
+import pt.ist.fenixframework.FenixFramework;
 
 /**
  * 
@@ -81,7 +81,7 @@ public class DashBoardWidget extends DashBoardWidget_Base {
         }
     }
 
-    @Service
+    @Atomic
     public void delete() {
         if (!isClosable()) {
             throw new UnsupportedOperationException();
@@ -89,14 +89,14 @@ public class DashBoardWidget extends DashBoardWidget_Base {
         if (getDashBoardPanel() != null && !getDashBoardPanel().isAccessibleToCurrentUser()) {
             throw new DomainException("error.ilegal.access.to.widget");
         }
-        removeDashBoardColumn();
-        removeDashBoardController();
+        setDashBoardColumn(null);
+        setDashBoardController(null);
         getWidgetController().kill(this, UserView.getCurrentUser());
         deleteDomainObject();
     }
 
     public <T extends DomainObject> T getStateObject() {
-        return getStateObjectId() != null ? (T) AbstractDomainObject.fromExternalId(getStateObjectId()) : null;
+        return getStateObjectId() != null ? FenixFramework.<T> getDomainObject(getStateObjectId()) : null;
     }
 
     public void setStateObject(DomainObject domainObject) {
@@ -128,7 +128,7 @@ public class DashBoardWidget extends DashBoardWidget_Base {
         return getDashBoardPanel().isAccessibleToUser(user);
     }
 
-    @Service
+    @Atomic
     public static DashBoardWidget newWidget(Class<? extends WidgetController> widgetClass) {
         return new DashBoardWidget(widgetClass);
     }

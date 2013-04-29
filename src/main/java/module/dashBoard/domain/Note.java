@@ -38,7 +38,7 @@ public class Note extends Note_Base {
     }
 
     public void delete() {
-        removeDashBoardController();
+        setDashBoardController(null);
         deleteDomainObject();
     }
 

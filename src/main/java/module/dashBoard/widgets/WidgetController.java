@@ -32,7 +32,7 @@ import module.dashBoard.presentationTier.WidgetRequest;
 import org.apache.struts.action.ActionForward;
 
 import pt.ist.bennu.core.domain.User;
-import pt.ist.fenixWebFramework.services.Service;
+import pt.ist.fenixframework.Atomic;
 
 /**
  * 
@@ -66,7 +66,7 @@ public abstract class WidgetController {
      * @param widget
      *            The widget from which to obtain or create the WidgetOptions
      */
-    @Service
+    @Atomic
     protected WidgetOptions getOrCreateOptions(DashBoardWidget widget) {
         WidgetOptions options = widget.getOptions();
         if (options == null) {

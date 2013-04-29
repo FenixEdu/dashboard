@@ -52,8 +52,8 @@ public class UserDashBoardPanel extends UserDashBoardPanel_Base {
     }
 
     public void delete() {
-        removeUser();
-        removeDashBoardController();
+        setUser(null);
+        setDashBoardController(null);
         for (final DashBoardColumn dashBoardColumn : getDashBoardColumnsSet()) {
             dashBoardColumn.delete();
         }

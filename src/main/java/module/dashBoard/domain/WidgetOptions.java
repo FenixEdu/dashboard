@@ -36,8 +36,8 @@ public class WidgetOptions extends WidgetOptions_Base {
     }
 
     public void delete() {
-        removeDashBoardController();
-        removeWidget();
+        setDashBoardController(null);
+        setWidget(null);
         deleteDomainObject();
     }
 

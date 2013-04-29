@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import pt.ist.bennu.core.domain.exceptions.DomainException;
-import pt.ist.fenixWebFramework.services.Service;
+import pt.ist.fenixframework.Atomic;
 
 /**
  * 
@@ -56,7 +56,7 @@ public class DashBoardColumn extends DashBoardColumn_Base {
         setDashBoardPanel(panel);
     }
 
-    @Service
+    @Atomic
     public void addWidget(DashBoardWidget widget) {
         if (!getDashBoardPanel().isAccessibleToCurrentUser()) {
             throw new DomainException("error.permission.denied");
@@ -67,7 +67,7 @@ public class DashBoardColumn extends DashBoardColumn_Base {
         super.addWidgets(widget);
     }
 
-    @Service
+    @Atomic
     public void removeWidget(DashBoardWidget widget) {
         if (!getDashBoardPanel().isAccessibleToCurrentUser()) {
             throw new DomainException("error.permission.denied");
@@ -91,12 +91,17 @@ public class DashBoardColumn extends DashBoardColumn_Base {
     }
 
     public void delete() {
-        removeDashBoardController();
-        removeDashBoardPanel();
+        setDashBoardController(null);
+        setDashBoardPanel(null);
         for (final DashBoardWidget dashBoardWidget : getWidgetsSet()) {
             dashBoardWidget.delete();
         }
         deleteDomainObject();
+    }
+
+    @Deprecated
+    public java.util.Set<module.dashBoard.domain.DashBoardWidget> getWidgets() {
+        return getWidgetsSet();
     }
 
 }
