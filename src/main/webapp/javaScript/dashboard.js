@@ -58,7 +58,7 @@ function startDashBoard(numberOfColumns, yesLabel, noLabel, removeMessage, remov
 			.addClass("ui-widget-header ui-corner-top").end()
 		.find(".portlet-content");
 
-		$(".portlet-header .ui-icon-close").click(function() {
+		$(".portlet-header .glyphicon-remove").click(function() {
 			var widget = $(this).parent().parent();
 			var widgetName = getWidgetName(widget);
 			var title = formatString(removeTitle,[widgetName])
@@ -86,25 +86,22 @@ function startDashBoard(numberOfColumns, yesLabel, noLabel, removeMessage, remov
 
 		});
 				
-		$(".portlet-header .ui-icon-pencil").click(function() {
+		$(".portlet-header .glyphicon-pencil").click(function() {
 			widgetCall(editURL, $(this).parent().next());
 		});
 				
-		$(".portlet-header .ui-icon-wrench").click(function () {
+		$(".portlet-header .glyphicon-wrench").click(function () {
 			widgetCall(optionsURL, $(this).parent().next());
 		});
 		
-		$(".portlet-header .ui-icon-help").click(function() {
+		$(".portlet-header .glyphicon-question-sign").click(function() {
 			var widget = $(this).parent().parent();
 			$.getJSON(helpURL,
 				 	    { dashBoardWidgetId: widget.attr('id') },
 				    	function(data) { 
 				 	    	$("#dashBoardMessageContainer").empty();
-							$("#dashBoardMessageContainer").append('<div class="highlightBox" style="display: none;"><span class="ui-icon ui-icon-closethick" style="float: right;"></span>' + data['helpText'] + ' </div>')
-							.find(".highlightBox").slideDown("slow").end()
-							.find(".ui-icon").click(function() {
-								$("#dashBoardMessageContainer .highlightBox").slideUp("slow");
-							}).end();
+							$("#dashBoardMessageContainer").append('<div class="highlightBox alert alert-warning" style="display: none;"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + data['helpText'] + ' </div>')
+							.find(".highlightBox").slideDown("fast").end();
 				 	    }
 				 	    );
 		});
@@ -169,4 +166,12 @@ function loadViewWidgetBody(widgetContent) {
 }
 function getWidgetName(widget) {
 	return widget.children(".portlet-header").children(".widgetName").text();
+}
+
+function formatString(string, formatTokens) {
+	var text = string;
+	for (i=0; i < formatTokens.length ; i++) {
+		text = text.replace(new RegExp("\\{" + i + "\\}"),formatTokens[i]);
+	}
+	return text;
 }

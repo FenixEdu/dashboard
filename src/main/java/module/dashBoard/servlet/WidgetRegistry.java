@@ -22,17 +22,22 @@
  *   along with the Dashboard Module. If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package module.dashBoard;
+package module.dashBoard.servlet;
 
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletException;
 
 import module.dashBoard.domain.DashBoardPanel;
+import module.dashBoard.domain.DashBoardWidget;
+import module.dashBoard.widgets.DashboardWidget;
 import module.dashBoard.widgets.WidgetController;
-import pt.ist.bennu.core.domain.User;
-import pt.ist.bennu.core.util.BundleUtil;
+
+import org.fenixedu.bennu.core.domain.User;
+import org.fenixedu.bennu.core.i18n.BundleUtil;
 
 /**
  * 
@@ -40,47 +45,36 @@ import pt.ist.bennu.core.util.BundleUtil;
  * @author Paulo Abrantes
  * 
  */
-public class WidgetRegister {
+public class WidgetRegistry {
 
-    public static WidgetAditionPredicate ALWAYS_ADD_PREDICATE = new WidgetAditionPredicate() {
+    public static final Comparator<Class<? extends WidgetController>> WIDGET_NAME_COMPARATOR = (o1, o2) -> getNameForWidget(o1)
+            .compareTo(getNameForWidget(o2));
 
-        @Override
-        public boolean canBeAdded(DashBoardPanel panel, User userAdding) {
-            return true;
+    public static void addWidgetsForNewPanel(DashBoardPanel dashBoardPanel) {
+        availableWidgets.stream().filter((holder) -> holder.position >= 0)
+                .forEach((holder) -> dashBoardPanel.addWidgetToColumn(holder.position, new DashBoardWidget(holder.controller)));
+    }
+
+    public static String getNameForWidget(Class<?> type) {
+        DashboardWidget widget = type.getAnnotation(DashboardWidget.class);
+        return BundleUtil.getString(widget.nameBundle(), widget.nameKey());
+    }
+
+    static void register(Class<?> type) throws ServletException {
+        try {
+            DashboardWidget widget = type.getAnnotation(DashboardWidget.class);
+            WidgetAditionPredicate predicate = widget.aditionPredicate().newInstance();
+            availableWidgets.add(new WidgetControllerHolder(type, predicate, widget.defaultColumn()));
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new ServletException(e);
         }
+    }
 
-    };
-
-    public static Comparator<Class<? extends WidgetController>> WIDGET_NAME_COMPARATOR =
-            new Comparator<Class<? extends WidgetController>>() {
-
-                @Override
-                public int compare(Class<? extends WidgetController> o1, Class<? extends WidgetController> o2) {
-                    return BundleUtil.getLocalizedNamedFroClass(o1).compareTo(BundleUtil.getLocalizedNamedFroClass(o2));
-                }
-
-            };
-
-    private static Set<WidgetControllerHolder> availableWidgets = new HashSet<WidgetControllerHolder>();
+    private static final Set<WidgetControllerHolder> availableWidgets = new HashSet<>();
 
     public static Set<Class<? extends WidgetController>> getAvailableWidgets(DashBoardPanel panel, User userAdding) {
-
-        Set<Class<? extends WidgetController>> widgetControllers =
-                new TreeSet<Class<? extends WidgetController>>(WIDGET_NAME_COMPARATOR);
-        for (WidgetControllerHolder holder : availableWidgets) {
-            if (holder.canBeAdded(panel, userAdding)) {
-                widgetControllers.add(holder.getController());
-            }
-        }
-        return widgetControllers;
-    }
-
-    public static void registerWidget(Class<? extends WidgetController> widgetClass) {
-        availableWidgets.add(new WidgetControllerHolder(widgetClass, ALWAYS_ADD_PREDICATE));
-    }
-
-    public static void registerWidget(Class<? extends WidgetController> widgetClass, WidgetAditionPredicate predicate) {
-        availableWidgets.add(new WidgetControllerHolder(widgetClass, predicate));
+        return availableWidgets.stream().filter((holder) -> holder.canBeAdded(panel, userAdding))
+                .map(WidgetControllerHolder::getController).sorted(WIDGET_NAME_COMPARATOR).collect(Collectors.toSet());
     }
 
     public static interface WidgetAditionPredicate {
@@ -90,10 +84,13 @@ public class WidgetRegister {
     private static class WidgetControllerHolder {
         private final Class<? extends WidgetController> controller;
         private final WidgetAditionPredicate predicate;
+        private final int position;
 
-        public WidgetControllerHolder(Class<? extends WidgetController> controller, WidgetAditionPredicate predicate) {
-            this.controller = controller;
+        @SuppressWarnings("unchecked")
+        public WidgetControllerHolder(Class<?> controller, WidgetAditionPredicate predicate, int position) {
+            this.controller = (Class<? extends WidgetController>) controller;
             this.predicate = predicate;
+            this.position = position;
         }
 
         public boolean canBeAdded(DashBoardPanel panel, User userAdding) {
@@ -120,4 +117,5 @@ public class WidgetRegister {
             return controller.hashCode();
         }
     }
+
 }

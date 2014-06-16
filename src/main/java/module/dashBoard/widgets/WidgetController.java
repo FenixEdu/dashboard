@@ -28,10 +28,11 @@ import module.dashBoard.domain.DashBoardWidget;
 import module.dashBoard.domain.WidgetOptions;
 import module.dashBoard.presentationTier.DashBoardManagementAction;
 import module.dashBoard.presentationTier.WidgetRequest;
+import module.dashBoard.servlet.WidgetRegistry;
 
 import org.apache.struts.action.ActionForward;
+import org.fenixedu.bennu.core.domain.User;
 
-import pt.ist.bennu.core.domain.User;
 import pt.ist.fenixframework.Atomic;
 
 /**
@@ -202,5 +203,18 @@ public abstract class WidgetController {
      */
 
     public abstract String getWidgetDescription();
+
+    public final String getWidgetName() {
+        return WidgetRegistry.getNameForWidget(this.getClass());
+    }
+
+    public static WidgetController internalize(Class<?> type) {
+        try {
+            return (WidgetController) type.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 }

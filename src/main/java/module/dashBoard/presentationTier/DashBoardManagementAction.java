@@ -25,37 +25,42 @@
 package module.dashBoard.presentationTier;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import module.dashBoard.WidgetRegister;
 import module.dashBoard.domain.DashBoardColumnBean;
 import module.dashBoard.domain.DashBoardPanel;
 import module.dashBoard.domain.DashBoardWidget;
-import module.dashBoard.domain.UserDashBoardPanel;
+import module.dashBoard.servlet.WidgetRegistry;
 import module.dashBoard.widgets.WidgetController;
 
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
+import org.fenixedu.bennu.core.domain.User;
+import org.fenixedu.bennu.core.presentationTier.actions.BaseAction;
+import org.fenixedu.bennu.core.security.Authenticate;
+import org.fenixedu.bennu.portal.EntryPoint;
+import org.fenixedu.bennu.portal.StrutsApplication;
+import org.fenixedu.bennu.portal.servlet.PortalLayoutInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import pt.ist.bennu.core.applicationTier.Authenticate.UserView;
-import pt.ist.bennu.core.domain.User;
-import pt.ist.bennu.core.presentationTier.actions.ContextBaseAction;
-import pt.ist.bennu.core.util.BundleUtil;
 import pt.ist.fenixWebFramework.servlets.filters.contentRewrite.GenericChecksumRewriter;
 import pt.ist.fenixWebFramework.servlets.filters.contentRewrite.RequestChecksumFilter;
-import pt.ist.fenixWebFramework.servlets.filters.contentRewrite.RequestChecksumFilter.ChecksumPredicate;
-import pt.ist.fenixWebFramework.servlets.json.JsonObject;
 import pt.ist.fenixWebFramework.struts.annotations.Mapping;
+import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.FenixFramework;
 
+import com.google.gson.JsonObject;
+
 @Mapping(path = "/dashBoardManagement")
+@StrutsApplication(bundle = "DashBoardResources", path = "dashboard", titleKey = "title.dashboard", accessGroup = "logged",
+        hint = "Utilities")
 /**
  * 
  * @author João Neves
@@ -63,25 +68,20 @@ import pt.ist.fenixframework.FenixFramework;
  * @author Paulo Abrantes
  * 
  */
-public class DashBoardManagementAction extends ContextBaseAction {
+public class DashBoardManagementAction extends BaseAction {
 
     private static Logger logger = LoggerFactory.getLogger(DashBoardManagementAction.class.getName());
 
     static {
-        RequestChecksumFilter.registerFilterRule(new ChecksumPredicate() {
-            @Override
-            public boolean shouldFilter(HttpServletRequest httpServletRequest) {
-                return !(httpServletRequest.getRequestURI().endsWith("/dashBoardManagement.do")
-                        && httpServletRequest.getQueryString() != null && (httpServletRequest.getQueryString().contains(
-                        "method=order")
-                        || httpServletRequest.getQueryString().contains("method=requestWidgetHelp")
-                        || httpServletRequest.getQueryString().contains("method=removeWidgetFromColumn")
-                        || httpServletRequest.getQueryString().contains("method=viewWidget")
-                        || httpServletRequest.getQueryString().contains("method=editWidget")
-                        || httpServletRequest.getQueryString().contains("method=editOptions") || httpServletRequest
-                        .getQueryString().contains("method=controllerDescription")));
-            }
-        });
+        RequestChecksumFilter.registerFilterRule(httpServletRequest -> !(httpServletRequest.getRequestURI().endsWith(
+                "/dashBoardManagement.do")
+                && httpServletRequest.getQueryString() != null && (httpServletRequest.getQueryString().contains("method=order")
+                || httpServletRequest.getQueryString().contains("method=requestWidgetHelp")
+                || httpServletRequest.getQueryString().contains("method=removeWidgetFromColumn")
+                || httpServletRequest.getQueryString().contains("method=viewWidget")
+                || httpServletRequest.getQueryString().contains("method=editWidget")
+                || httpServletRequest.getQueryString().contains("method=editOptions") || httpServletRequest.getQueryString()
+                .contains("method=controllerDescription"))));
     }
 
     public ActionForward order(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
@@ -123,24 +123,24 @@ public class DashBoardManagementAction extends ContextBaseAction {
     public static ActionForward forwardToDashBoard(DashBoardPanel panel, HttpServletRequest request) {
         ActionForward forward = new ActionForward();
         forward.setRedirect(true);
-        String realPath =
-                "/dashBoardManagement.do?method=viewDashBoardPanel&dashBoardId=" + panel.getExternalId() + "&" + CONTEXT_PATH
-                        + "=" + getContext(request).getPath();
+        String realPath = "/dashBoardManagement.do?method=viewDashBoardPanel&dashBoardId=" + panel.getExternalId();
         forward.setPath(realPath + "&" + GenericChecksumRewriter.CHECKSUM_ATTRIBUTE_NAME + "="
-                + GenericChecksumRewriter.calculateChecksum(request.getContextPath() + realPath));
+                + GenericChecksumRewriter.calculateChecksum(request.getContextPath() + realPath, request.getSession()));
         return forward;
     }
 
     public ActionForward viewWidget(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
             final HttpServletResponse response) {
         DashBoardWidget widget = getDomainObject(request, "dashBoardWidgetId");
-        User currentUser = UserView.getCurrentUser();
+        User currentUser = Authenticate.getUser();
 
-        if (!checkPanelUser((UserDashBoardPanel) widget.getDashBoardPanel(), currentUser)) {
+        if (!checkPanelUser(widget.getDashBoardPanel(), currentUser)) {
             return null;
         }
 
         widget.getWidgetController().doView(new WidgetRequest(request, response, widget, currentUser));
+
+        PortalLayoutInjector.skipLayoutOn(request);
 
         return forwardToWidget(widget, request, response);
     }
@@ -148,13 +148,15 @@ public class DashBoardManagementAction extends ContextBaseAction {
     public ActionForward editWidget(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
             final HttpServletResponse response) {
         DashBoardWidget widget = getDomainObject(request, "dashBoardWidgetId");
-        User currentUser = UserView.getCurrentUser();
+        User currentUser = Authenticate.getUser();
 
-        if (!checkPanelUser((UserDashBoardPanel) widget.getDashBoardPanel(), currentUser)) {
+        if (!checkPanelUser(widget.getDashBoardPanel(), currentUser)) {
             return null;
         }
 
         widget.getWidgetController().doEdit(new WidgetRequest(request, response, widget, currentUser));
+
+        PortalLayoutInjector.skipLayoutOn(request);
 
         return forwardToWidget(widget, request, response);
     }
@@ -162,18 +164,20 @@ public class DashBoardManagementAction extends ContextBaseAction {
     public ActionForward editOptions(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
             final HttpServletResponse response) {
         DashBoardWidget widget = getDomainObject(request, "dashBoardWidgetId");
-        User currentUser = UserView.getCurrentUser();
+        User currentUser = Authenticate.getUser();
 
-        if (!checkPanelUser((UserDashBoardPanel) widget.getDashBoardPanel(), currentUser)) {
+        if (!checkPanelUser(widget.getDashBoardPanel(), currentUser)) {
             return null;
         }
 
         widget.getWidgetController().doEditOptions(new WidgetRequest(request, response, widget, currentUser));
 
+        PortalLayoutInjector.skipLayoutOn(request);
+
         return forwardToWidget(widget, request, response);
     }
 
-    private static boolean checkPanelUser(UserDashBoardPanel panel, User currentUser) {
+    private static boolean checkPanelUser(DashBoardPanel panel, User currentUser) {
         if (panel.getUser() != currentUser) {
             if (logger.isWarnEnabled()) {
                 logger.warn("Current user (" + (currentUser != null ? currentUser.getUsername() : "null")
@@ -194,21 +198,33 @@ public class DashBoardManagementAction extends ContextBaseAction {
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);
         request.setAttribute("widget", widget);
-        WidgetLayoutContext context = new WidgetLayoutContext(widget);
-        return context.forward();
+        return new ActionForward(WidgetBodyResolver.getBodyFor(widget.getWidgetController().getClass()));
     }
 
     public ActionForward viewDashBoardPanel(final DashBoardPanel panel, final HttpServletRequest request,
             final HttpServletResponse response) {
         request.setAttribute("dashBoard", panel);
-        return forward(request, "/dashBoardPanel/viewDashBoard.jsp");
+        return forward("/dashBoardPanel/viewDashBoard.jsp");
     }
 
+    @EntryPoint
     public ActionForward viewDashBoardPanel(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
             final HttpServletResponse response) {
 
-        DashBoardPanel panel = getDomainObject(request, "dashBoardId");
+        User user = Authenticate.getUser();
+        DashBoardPanel panel = user.getUserDashBoard();
+        if (panel == null) {
+            panel = init(user);
+        }
         return viewDashBoardPanel(panel, request, response);
+    }
+
+    @Atomic
+    private DashBoardPanel init(User user) {
+        if (user.getUserDashBoard() != null) {
+            return user.getUserDashBoard();
+        }
+        return new DashBoardPanel(user);
     }
 
     public ActionForward removeWidgetFromColumn(final ActionMapping mapping, final ActionForm form,
@@ -218,9 +234,9 @@ public class DashBoardManagementAction extends ContextBaseAction {
         try {
             DashBoardWidget widget = getDomainObject(request, "dashBoardWidgetId");
             widget.delete();
-            jsonObject.addAttribute("status", "OK");
+            jsonObject.addProperty("status", "OK");
         } catch (Exception e) {
-            jsonObject.addAttribute("status", "NOT_OK");
+            jsonObject.addProperty("status", "NOT_OK");
         }
         writeJsonReply(response, jsonObject);
         return null;
@@ -231,10 +247,11 @@ public class DashBoardManagementAction extends ContextBaseAction {
 
         DashBoardPanel panel = getDomainObject(request, "dashBoardId");
         request.setAttribute("dashBoard", panel);
-        request.setAttribute("widgets", WidgetRegister.getAvailableWidgets(panel, UserView.getCurrentUser()));
-        return forward(request, "/dashBoardPanel/addWidget.jsp");
+        request.setAttribute("widgets", WidgetRegistry.getAvailableWidgets(panel, Authenticate.getUser()));
+        return forward("/dashBoardPanel/addWidget.jsp");
     }
 
+    @SuppressWarnings("unchecked")
     public ActionForward addWidget(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
             final HttpServletResponse response) {
 
@@ -258,7 +275,7 @@ public class DashBoardManagementAction extends ContextBaseAction {
             final HttpServletResponse response) {
 
         DashBoardWidget widget = getDomainObject(request, "dashBoardWidgetId");
-        return widget.getWidgetController().doSubmit(new WidgetRequest(request, response, widget, UserView.getCurrentUser()));
+        return widget.getWidgetController().doSubmit(new WidgetRequest(request, response, widget, Authenticate.getUser()));
     }
 
     public ActionForward requestWidgetHelp(final ActionMapping mapping, final ActionForm form, final HttpServletRequest request,
@@ -270,13 +287,14 @@ public class DashBoardManagementAction extends ContextBaseAction {
         JsonObject jsonObject = new JsonObject();
 
         if (panel.isAccessibleToCurrentUser()) {
-            jsonObject.addAttribute("helpText", widget.getWidgetController().getHelp());
+            jsonObject.addProperty("helpText", widget.getWidgetController().getHelp());
         }
 
         writeJsonReply(response, jsonObject);
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public ActionForward controllerDescription(final ActionMapping mapping, final ActionForm form,
             final HttpServletRequest request, final HttpServletResponse response) throws IOException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
@@ -287,11 +305,21 @@ public class DashBoardManagementAction extends ContextBaseAction {
 
         if (controllerClass != null) {
             WidgetController controller = controllerClass.newInstance();
-            jsonObject.addAttribute("description", controller.getWidgetDescription());
-            jsonObject.addAttribute("name", BundleUtil.getLocalizedNamedFroClass(controllerClass));
+            jsonObject.addProperty("description", controller.getWidgetDescription());
+            jsonObject.addProperty("name", WidgetRegistry.getNameForWidget(controllerClass));
         }
 
         writeJsonReply(response, jsonObject);
         return null;
+    }
+
+    protected void writeJsonReply(HttpServletResponse response, JsonObject jsonObject) throws IOException {
+        byte[] jsonReply = jsonObject.toString().getBytes();
+        final OutputStream outputStream = response.getOutputStream();
+        response.setContentType("text");
+        response.setContentLength(jsonReply.length);
+        outputStream.write(jsonReply);
+        outputStream.flush();
+        outputStream.close();
     }
 }

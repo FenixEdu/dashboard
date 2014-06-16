@@ -29,10 +29,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import module.dashBoard.domain.DashBoardPanel;
 import module.dashBoard.domain.DashBoardWidget;
-import pt.ist.bennu.core.domain.User;
+
+import org.fenixedu.bennu.core.domain.User;
+
 import pt.ist.fenixWebFramework.renderers.components.state.IViewState;
 import pt.ist.fenixWebFramework.renderers.model.MetaObject;
 import pt.ist.fenixWebFramework.renderers.utils.RenderUtils;
+import pt.ist.fenixWebFramework.servlets.filters.contentRewrite.GenericChecksumRewriter;
 import pt.ist.fenixframework.DomainObject;
 
 /**
@@ -42,11 +45,11 @@ import pt.ist.fenixframework.DomainObject;
  */
 public class WidgetRequest {
 
-    private HttpServletRequest request;
-    private HttpServletResponse response;
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
 
-    private User currentUser;
-    private DashBoardWidget widget;
+    private final User currentUser;
+    private final DashBoardWidget widget;
 
     public WidgetRequest(HttpServletRequest request, HttpServletResponse response, DashBoardWidget widget, User user) {
         this.request = request;
@@ -83,15 +86,21 @@ public class WidgetRequest {
         return request.getContextPath();
     }
 
+    public String injectChecksumIn(String url) {
+        return GenericChecksumRewriter.injectChecksumInUrl(getContextPath(), url, request.getSession());
+    }
+
     public DashBoardWidget getWidget() {
         return widget;
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Object> T getRenderedObject(final String id) {
         final IViewState viewState = RenderUtils.getViewState(id);
         return (T) getRenderedObject(viewState);
     }
 
+    @SuppressWarnings("unchecked")
     private <T extends Object> T getRenderedObject(final IViewState viewState) {
         if (viewState != null) {
             MetaObject metaObject = viewState.getMetaObject();

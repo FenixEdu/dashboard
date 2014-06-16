@@ -1,34 +1,40 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>pt.ist</groupId>
-        <artifactId>bennu-project</artifactId>
-        <version>1.1.0</version>
+        <groupId>org.fenixedu</groupId>
+        <artifactId>fenix-framework-project</artifactId>
+        <version>2.0.1</version>
     </parent>
 
-    <groupId>pt.ist</groupId>
     <artifactId>dashboard</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>dashboard</name>
-    
+    <name>Dashboard</name>
+
     <scm>
-        <connection>scm:git:git@github.com:ist-dsi/dashboard.git</connection>
-        <developerConnection>scm:git:git@github.com:ist-dsi/dashboard.git</developerConnection>
-        <url>http://ist-dsi.github.io/dashboard/</url>
+        <connection>scm:git:git@github.com:FenixEdu/dashboard.git</connection>
+        <developerConnection>scm:git:git@github.com:FenixEdu/dashboard.git</developerConnection>
+        <url>http://fenixedu.github.io/dashboard/</url>
         <tag>HEAD</tag>
     </scm>
 
     <properties>
-        <version.pt.ist.bennu.core>1.1.0</version.pt.ist.bennu.core>
+        <version.org.fenixedu.bennu.core>3.1.0</version.org.fenixedu.bennu.core>
+        <version.org.fenixedu.bennu.renderers>4.0.6</version.org.fenixedu.bennu.renderers>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>pt.ist</groupId>
+            <groupId>org.fenixedu</groupId>
             <artifactId>bennu-core</artifactId>
-            <version>${version.pt.ist.bennu.core}</version>
+            <version>${version.org.fenixedu.bennu.core}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.fenixedu</groupId>
+            <artifactId>bennu-renderers</artifactId>
+            <version>${version.org.fenixedu.bennu.renderers}</version>
         </dependency>
     </dependencies>
 
