@@ -13,7 +13,7 @@
 
 <%@page import="module.dashBoard.presentationTier.WidgetBodyResolver"%>
 
-<h2> Dashboard </h2>
+<h2> <bean:message key="title.dashboard" bundle="DASH_BOARD_RESOURCES"/> </h2>
 
 <bean:size id="numberOfColumns" name="dashBoard" property="dashBoardColumns"/>
 <bean:define id="dashBoardId" name="dashBoard" property="externalId" type="java.lang.String"/>
