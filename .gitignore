@@ -6,7 +6,10 @@
 *.ear
 
 .settings/
+.classpath
+.project
 
 # Maven #
 target/
 bin/
+/output

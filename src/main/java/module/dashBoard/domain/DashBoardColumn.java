@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import pt.ist.bennu.core.domain.exceptions.DomainException;
 import pt.ist.fenixframework.Atomic;
 
 /**
@@ -40,14 +39,8 @@ import pt.ist.fenixframework.Atomic;
  */
 public class DashBoardColumn extends DashBoardColumn_Base {
 
-    public static final Comparator<DashBoardColumn> IN_PANEL_COMPARATOR = new Comparator<DashBoardColumn>() {
-
-        @Override
-        public int compare(DashBoardColumn column1, DashBoardColumn column2) {
-            return Integer.valueOf(column1.getColumnOrder()).compareTo(column2.getColumnOrder());
-        }
-
-    };
+    public static final Comparator<DashBoardColumn> IN_PANEL_COMPARATOR = (column1, column2) -> Integer.valueOf(
+            column1.getColumnOrder()).compareTo(column2.getColumnOrder());
 
     public DashBoardColumn(int order, DashBoardPanel panel) {
         super();
@@ -59,9 +52,9 @@ public class DashBoardColumn extends DashBoardColumn_Base {
     @Atomic
     public void addWidget(DashBoardWidget widget) {
         if (!getDashBoardPanel().isAccessibleToCurrentUser()) {
-            throw new DomainException("error.permission.denied");
+            throw DashBoardDomainException.permissionDenied();
         }
-        for (DashBoardWidget existingWidget : getWidgets()) {
+        for (DashBoardWidget existingWidget : getWidgetsSet()) {
             existingWidget.setOrderInColumn(existingWidget.getOrderInColumn() + 1);
         }
         super.addWidgets(widget);
@@ -70,23 +63,23 @@ public class DashBoardColumn extends DashBoardColumn_Base {
     @Atomic
     public void removeWidget(DashBoardWidget widget) {
         if (!getDashBoardPanel().isAccessibleToCurrentUser()) {
-            throw new DomainException("error.permission.denied");
+            throw DashBoardDomainException.permissionDenied();
         }
         super.removeWidgets(widget);
     }
 
     public void rearrangeColumnTo(List<DashBoardWidget> widgets) {
-        getWidgets().clear();
+        getWidgetsSet().clear();
         int order = 0;
         for (DashBoardWidget widget : widgets) {
             widget.setOrderInColumn(order++);
-            getWidgets().add(widget);
+            getWidgetsSet().add(widget);
         }
     }
 
     public Set<DashBoardWidget> getOrderedWidgets() {
         Set<DashBoardWidget> widgets = new TreeSet<DashBoardWidget>(DashBoardWidget.IN_COLUMN_COMPARATOR);
-        widgets.addAll(getWidgets());
+        widgets.addAll(getWidgetsSet());
         return widgets;
     }
 
@@ -97,11 +90,6 @@ public class DashBoardColumn extends DashBoardColumn_Base {
             dashBoardWidget.delete();
         }
         deleteDomainObject();
-    }
-
-    @Deprecated
-    public java.util.Set<module.dashBoard.domain.DashBoardWidget> getWidgets() {
-        return getWidgetsSet();
     }
 
 }

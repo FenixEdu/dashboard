@@ -24,17 +24,17 @@
  */
 package module.dashBoard.domain;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import pt.ist.bennu.core.applicationTier.Authenticate.UserView;
-import pt.ist.bennu.core.domain.User;
-import pt.ist.bennu.core.domain.exceptions.DomainException;
+import module.dashBoard.servlet.WidgetRegistry;
+
+import org.fenixedu.bennu.core.domain.User;
+import org.fenixedu.bennu.core.security.Authenticate;
+
 import pt.ist.fenixframework.Atomic;
-import pt.utl.ist.fenix.tools.util.i18n.MultiLanguageString;
 
 /**
  * 
@@ -42,24 +42,20 @@ import pt.utl.ist.fenix.tools.util.i18n.MultiLanguageString;
  * @author Paulo Abrantes
  * 
  */
-public abstract class DashBoardPanel extends DashBoardPanel_Base {
+public class DashBoardPanel extends DashBoardPanel_Base {
 
-    public DashBoardPanel() {
+    public DashBoardPanel(User user) {
         super();
         for (int order = 0; order < 3; order++) {
             new DashBoardColumn(order, this);
         }
         setDashBoardController(DashBoardController.getInstance());
-
-    }
-
-    public DashBoardPanel(MultiLanguageString name) {
-        this();
-        setName(name);
+        setUser(user);
+        WidgetRegistry.addWidgetsForNewPanel(this);
     }
 
     public DashBoardColumn getColumn(int order) {
-        for (DashBoardColumn column : getDashBoardColumns()) {
+        for (DashBoardColumn column : getDashBoardColumnsSet()) {
             if (column.getColumnOrder() == order) {
                 return column;
             }
@@ -76,15 +72,17 @@ public abstract class DashBoardPanel extends DashBoardPanel_Base {
     }
 
     public boolean isAccessibleToCurrentUser() {
-        return isAccessibleToUser(UserView.getCurrentUser());
+        return isAccessibleToUser(Authenticate.getUser());
     }
 
-    public abstract boolean isAccessibleToUser(User user);
+    public boolean isAccessibleToUser(User user) {
+        return user != null && user == getUser();
+    }
 
     @Atomic
     public void edit(List<DashBoardColumnBean> beans) {
         if (!isAccessibleToCurrentUser()) {
-            throw new DomainException("error.permission.denied");
+            throw DashBoardDomainException.permissionDenied();
         }
         for (DashBoardColumnBean bean : beans) {
             DashBoardColumn column = getColumn(bean.getOrder());
@@ -94,34 +92,26 @@ public abstract class DashBoardPanel extends DashBoardPanel_Base {
 
     public Set<DashBoardColumn> getOrderedColumns() {
         Set<DashBoardColumn> columns = new TreeSet<DashBoardColumn>(DashBoardColumn.IN_PANEL_COMPARATOR);
-        columns.addAll(getDashBoardColumns());
+        columns.addAll(getDashBoardColumnsSet());
         return columns;
     }
 
     public Set<DashBoardWidget> getWidgetsSet() {
         Set<DashBoardWidget> widgets = new HashSet<DashBoardWidget>();
-        for (DashBoardColumn column : getDashBoardColumns()) {
-            widgets.addAll(column.getWidgets());
+        for (DashBoardColumn column : getDashBoardColumnsSet()) {
+            widgets.addAll(column.getWidgetsSet());
         }
 
         return widgets;
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends DashBoardPanel> List<T> getPanelsForUser(User user, Class<T> panelClass) {
-        List<T> panels = new ArrayList<T>();
-        for (DashBoardPanel panel : user.getUserDashBoardsSet()) {
-            if (panelClass.isAssignableFrom(panel.getClass())) {
-                panels.add((T) panel);
-            }
+    public void delete() {
+        setUser(null);
+        setDashBoardController(null);
+        for (final DashBoardColumn dashBoardColumn : getDashBoardColumnsSet()) {
+            dashBoardColumn.delete();
         }
-
-        return panels;
-    }
-
-    @Deprecated
-    public java.util.Set<module.dashBoard.domain.DashBoardColumn> getDashBoardColumns() {
-        return getDashBoardColumnsSet();
+        deleteDomainObject();
     }
 
 }

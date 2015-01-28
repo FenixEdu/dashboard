@@ -22,9 +22,9 @@
 <logic:iterate id="widget" name="widgets" indexId="col">
 	<bean:define id="widgetClassName" name="widget" property="name"/>
 	<tr>
-		<td style="width: 250px;"><fr:view name="widget" layout="name-resolver"/></td>
+		<td style="width: 250px;">${widget.newInstance().widgetName}</td>
 		<td style="width: 40px">
-			<html:link styleId='<%= "add-" + widgetClassName %>' page="<%= "/dashBoardManagement.do?method=addWidget&dashBoardWidgetClass=" + widgetClassName%>" paramId="dashBoardId" paramName="dashBoard" paramProperty="externalId">
+			<html:link styleId="add-${widgetClassName}" page="/dashBoardManagement.do?method=addWidget&dashBoardWidgetClass=${widgetClassName}" paramId="dashBoardId" paramName="dashBoard" paramProperty="externalId">
 				<bean:message key="link.add" bundle="MYORG_RESOURCES"/>
 			</html:link>
 		</td>

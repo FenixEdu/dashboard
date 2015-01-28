@@ -1,25 +1,26 @@
 package module.dashBoard.domain; 
 
-class DashBoardPanel {
-	MultiLanguageString name;
+valueType module.dashBoard.widgets.WidgetController as WidgetController {
+    externalizeWith {
+        Class getClass();
+    }
+    internalizeWith internalize();
 }
 
-class UserDashBoardPanel extends DashBoardPanel {
-
+public class DashBoardPanel {
 }
 
-class DashBoardColumn {
+public class DashBoardColumn {
 	int columnOrder;
 }
 
-class DashBoardWidget {
+public class DashBoardWidget {
 	String stateObjectId;
 	int orderInColumn;
-	String widgetClassName;
+	protected WidgetController widgetController;
 }
 
 class WidgetOptions {
-
 }
 
 class Note {
@@ -86,12 +87,10 @@ relation NoteDashBoardController {
 
 relation DashBoardControllerMyOrg {
 	DashBoardController playsRole dashBoardController;
-	.pt.ist.bennu.core.domain.MyOrg playsRole myOrg;
+	.org.fenixedu.bennu.core.domain.Bennu playsRole bennu;
 }
 
-relation UserDashBoardPanelUser {
-	UserDashBoardPanel playsRole userDashBoards {
-		multiplicity *;
-	}
-	.pt.ist.bennu.core.domain.User playsRole user;
+relation DashBoardPanelUser {
+	DashBoardPanel playsRole userDashBoard;
+	.org.fenixedu.bennu.core.domain.User playsRole user;
 }

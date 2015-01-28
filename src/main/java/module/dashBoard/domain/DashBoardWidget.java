@@ -27,9 +27,10 @@ package module.dashBoard.domain;
 import java.util.Comparator;
 
 import module.dashBoard.widgets.WidgetController;
-import pt.ist.bennu.core.applicationTier.Authenticate.UserView;
-import pt.ist.bennu.core.domain.User;
-import pt.ist.bennu.core.domain.exceptions.DomainException;
+
+import org.fenixedu.bennu.core.domain.User;
+import org.fenixedu.bennu.core.security.Authenticate;
+
 import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.DomainObject;
 import pt.ist.fenixframework.FenixFramework;
@@ -43,42 +44,23 @@ import pt.ist.fenixframework.FenixFramework;
  */
 public class DashBoardWidget extends DashBoardWidget_Base {
 
-    public static final Comparator<DashBoardWidget> IN_COLUMN_COMPARATOR = new Comparator<DashBoardWidget>() {
+    public static final Comparator<DashBoardWidget> IN_COLUMN_COMPARATOR = (widget1, widget2) -> Integer.valueOf(
+            widget1.getOrderInColumn()).compareTo(widget2.getOrderInColumn());
 
-        @Override
-        public int compare(DashBoardWidget widget1, DashBoardWidget widget2) {
-            return Integer.valueOf(widget1.getOrderInColumn()).compareTo(widget2.getOrderInColumn());
-        }
-
-    };
-
-    private WidgetController instance;
-
-    public DashBoardWidget(Class<? extends WidgetController> widgetClass) {
+    public DashBoardWidget(Class<? extends WidgetController> controller) {
         super();
         setDashBoardController(DashBoardController.getInstance());
-        setWidgetClassName(widgetClass.getName());
-        getWidgetController().init(this, UserView.getCurrentUser());
+        setWidgetController(WidgetController.internalize(controller));
+        getWidgetController().init(this, Authenticate.getUser());
         setOrderInColumn(0);
     }
 
+    @Override
     public WidgetController getWidgetController() {
         if (getDashBoardColumn() != null && getDashBoardPanel() != null && !getDashBoardPanel().isAccessibleToCurrentUser()) {
-            throw new DomainException("error.ilegal.access.to.widget");
+            throw DashBoardDomainException.illegalAccessToWidget();
         }
-        if (instance == null) {
-            initializeWidget();
-        }
-        return instance;
-    }
-
-    private synchronized void initializeWidget() {
-        try {
-            instance = (WidgetController) Class.forName(getWidgetClassName()).newInstance();
-            instance.init(this, UserView.getCurrentUser());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return super.getWidgetController();
     }
 
     @Atomic
@@ -87,11 +69,11 @@ public class DashBoardWidget extends DashBoardWidget_Base {
             throw new UnsupportedOperationException();
         }
         if (getDashBoardPanel() != null && !getDashBoardPanel().isAccessibleToCurrentUser()) {
-            throw new DomainException("error.ilegal.access.to.widget");
+            throw DashBoardDomainException.illegalAccessToWidget();
         }
         setDashBoardColumn(null);
         setDashBoardController(null);
-        getWidgetController().kill(this, UserView.getCurrentUser());
+        getWidgetController().kill(this, Authenticate.getUser());
         deleteDomainObject();
     }
 
