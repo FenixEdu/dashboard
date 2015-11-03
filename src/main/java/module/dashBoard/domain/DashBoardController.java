@@ -41,18 +41,14 @@ public class DashBoardController extends DashBoardController_Base {
     }
 
     public static DashBoardController getInstance() {
-        if (Bennu.getInstance().getDashBoardController() == null) {
-            return initialize();
-        }
-        return Bennu.getInstance().getDashBoardController();
+        final DashBoardController controller = Bennu.getInstance().getDashBoardController();
+        return controller == null ? initialize() : controller;
     }
 
     @Atomic(mode = TxMode.WRITE)
     private static DashBoardController initialize() {
-        if (Bennu.getInstance().getDashBoardController() == null) {
-            return new DashBoardController();
-        }
-        return Bennu.getInstance().getDashBoardController();
+        final DashBoardController controller = Bennu.getInstance().getDashBoardController();
+        return controller == null ? new DashBoardController() : controller;
     }
 
 }
