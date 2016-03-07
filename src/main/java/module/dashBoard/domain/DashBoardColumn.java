@@ -86,9 +86,7 @@ public class DashBoardColumn extends DashBoardColumn_Base {
     public void delete() {
         setDashBoardController(null);
         setDashBoardPanel(null);
-        for (final DashBoardWidget dashBoardWidget : getWidgetsSet()) {
-            dashBoardWidget.delete();
-        }
+        getWidgetsSet().forEach(w -> w.delete());
         deleteDomainObject();
     }
 

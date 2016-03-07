@@ -29,11 +29,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import module.dashBoard.servlet.WidgetRegistry;
-
 import org.fenixedu.bennu.core.domain.User;
 import org.fenixedu.bennu.core.security.Authenticate;
 
+import module.dashBoard.servlet.WidgetRegistry;
 import pt.ist.fenixframework.Atomic;
 
 /**
@@ -98,19 +97,14 @@ public class DashBoardPanel extends DashBoardPanel_Base {
 
     public Set<DashBoardWidget> getWidgetsSet() {
         Set<DashBoardWidget> widgets = new HashSet<DashBoardWidget>();
-        for (DashBoardColumn column : getDashBoardColumnsSet()) {
-            widgets.addAll(column.getWidgetsSet());
-        }
-
+        getDashBoardColumnsSet().forEach(c -> widgets.addAll(c.getWidgetsSet()));
         return widgets;
     }
 
     public void delete() {
         setUser(null);
         setDashBoardController(null);
-        for (final DashBoardColumn dashBoardColumn : getDashBoardColumnsSet()) {
-            dashBoardColumn.delete();
-        }
+        getDashBoardColumnsSet().forEach(c -> c.delete());
         deleteDomainObject();
     }
 
