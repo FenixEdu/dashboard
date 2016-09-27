@@ -22,7 +22,7 @@
 
     <properties>
         <version.org.fenixedu.bennu.core>4.0.0.RC2</version.org.fenixedu.bennu.core>
-        <version.org.fenixedu.bennu.renderers>5.0.3</version.org.fenixedu.bennu.renderers>
+        <version.org.fenixedu.bennu.renderers>5.1.0.RC1</version.org.fenixedu.bennu.renderers>
     </properties>
 
     <dependencies>
