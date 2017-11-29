@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>dashboard</artifactId>
-    <version>DEV-SNAPSHOT</version>
+    <version>2.2.0</version>
     <packaging>jar</packaging>
     <name>Dashboard</name>
 
