@@ -13,16 +13,11 @@
     <name>Dashboard</name>
 
     <scm>
-        <connection>scm:git:git@github.com:FenixEdu/dashboard.git</connection>
-        <developerConnection>scm:git:git@github.com:FenixEdu/dashboard.git</developerConnection>
-        <url>http://fenixedu.github.io/dashboard/</url>
+        <connection>scm:git:git@repo.dsi.tecnico.ulisboa.pt:software/fenixedu/dashboard.git</connection>
+        <developerConnection>scm:git:git@repo.dsi.tecnico.ulisboa.pt:software/fenixedu/dashboard</developerConnection>
+        <url>https://repo.dsi.tecnico.ulisboa.pt/software/fenixedu/dashboard</url>
         <tag>HEAD</tag>
     </scm>
-
-    <issueManagement>
-        <system>JIRA</system>
-        <url>https://jira.fenixedu.org/browse/DDASH</url>
-    </issueManagement>
 
     <properties>
         <version.org.fenixedu.bennu.core>6.1.0</version.org.fenixedu.bennu.core>
@@ -52,5 +47,16 @@
             <id>fenixedu-maven-repository</id>
             <url>https://repo.fenixedu.org/fenixedu-maven-repository</url>
         </repository>
+        <repository>
+            <id>dsi-maven-artifacts</id>
+            <url>https://fenix-ashes.ist.utl.pt/nexus/repository/dsi-private-repo</url>
+        </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>dsi-maven-artifacts</id>
+            <url>https://fenix-ashes.tecnico.ulisboa.pt/nexus/repository/dsi-private-repo</url>
+        </repository>
+    </distributionManagement>
 </project>
